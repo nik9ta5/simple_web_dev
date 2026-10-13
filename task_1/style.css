@@ -1,0 +1,175 @@
+* {
+  box-sizing: border-box; 
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1f2937;
+    line-height: 1.5;
+
+    /* Вертикальный flex: прижать футер к низу */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* =================== Шапка =================== */
+.site-header {
+  height: 150px;
+  width: 100%;
+  background: linear-gradient(135deg, #000000 40%, #2fda49 90%);
+  color: #fff;
+
+  display: flex;            /* чтобы логотип выровнять по центру */
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;    /* brand над tagline */
+  line-height: 1.1;
+}
+
+.logo-text .brand {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.logo-text .tagline {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* =================== Меню =================== */
+.site-nav {
+  width: 100%;
+  background: #fff;
+}
+
+.site-nav ul {
+  list-style: none;          /* убрать маркеры */
+  display: flex;             /* пункты в ряд */
+  flex-wrap: wrap;           /* на узком экране перенести */
+}
+
+.site-nav a {
+  display: block;            /* чтобы padding работал со всех сторон */
+  padding: 0.9rem 1.4rem;
+  color: #000;
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  background: #394354;
+  color: #fff;
+}
+
+/* =================== Две колонки =================== */
+.layout {
+  flex: 1;                   /* растягивается между nav и footer */
+  display: flex;             /* две колонки в ряд */
+  flex-wrap: wrap;           /* разрешаем перенос, если узко */
+  width: 100%;
+}
+
+
+/* =================== Колонка с контентом =================== */
+.content {
+  flex: 1 1 0;               /* «займи всё свободное место» */
+  min-height: 400px;
+  min-width: 0;              /* фикс бага flex + длинные слова */
+  padding: 1.5rem 2rem;
+  background: #fff;
+}
+
+/* =================== Правая колонка =================== */
+.sidebar {
+  flex: 0 0 20%;             /* не расти, не сжимайся, ширина 20% */
+  min-width: 200px;          /* но не меньше 200px */
+  min-height: 300px;
+  padding: 1.5rem;
+  background: #e0e0e2;
+  border-left: 1px solid #e5e7eb;
+}
+
+/* =================== Footer =================== */
+.site-footer {
+  height: 100px;
+  width: 100%;
+  background: #000;
+  color: #d1d5db;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* =================== Типографика контента =================== */
+.content h1 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: #1e3a8a;
+}
+.content h2 {
+  font-size: 1.2rem;
+  margin: 1.25rem 0 0.5rem;
+}
+.content p {
+  margin-bottom: 1rem;
+}
+.content strong {
+  color: #b91c1c;
+}
+
+.sidebar h2 {
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+}
+.sidebar ul {
+  list-style: none;
+  font-size: 0.9rem;
+}
+.sidebar li {
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed #d1d5db;
+}
+
+
+
+/* =================== Печать только контента =================== */
+@media print {
+  .site-header,
+  .site-nav,
+  .sidebar,
+  .site-footer {
+    display: none !important;
+  }
+
+  .layout {
+    display: block;          /* сбрасываем flex, чтобы main занял 100% */
+  }
+
+  .content {
+    width: 100%;
+    padding: 0;
+    min-height: auto;        /* на печати не нужен пустой запас */
+    background: #fff;
+    color: #000;
+  }
+}
