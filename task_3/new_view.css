@@ -232,7 +232,7 @@ ul.menu_vtem_nav {
 .box_skitter ul { display: none; }
 .box_skitter .container_skitter { overflow: hidden; position: relative; }
 .box_skitter .image { overflow: hidden; }
-.box_skitter .image img { display: none; }
+.box_skitter .image img { display: block; }
 
 .box_skitter .prev_button,
 .box_skitter .next_button {
@@ -500,6 +500,11 @@ ul.menu_vtem_nav {
 @media (max-width: 639.98px) {
   #vt_bgtop_head { height: 60px; }
 
+  #vtemimageshow1 {
+    aspect-ratio: 320 / 180;   /* явные пропорции для мобилы */
+    height: auto;
+  }
+
   ul.menu_vtem_nav {
     display: none;         /* показываем через .is-open на бургере */
     flex-direction: column;
@@ -531,7 +536,7 @@ ul.menu_vtem_nav {
   #vt_news_show,
   #vt_drawer { flex: 1 1 auto; width: 100%; }
 
-  #vtemimageshow1 { max-width: 100%; }
+  #vtemimageshow1 { width: 100%; max-width: 618px; aspect-ratio: 618/260; }
 
   /* Крошки и поиск — в колонку */
   #vt_breadcrumb_top_wapper { flex-direction: column; align-items: stretch; }
