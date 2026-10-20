@@ -1,0 +1,629 @@
+/* --- Base Reset & Variables --- */
+:root {
+    --pink: #e24b61;
+    --pink-hover: #c93c51;
+    --purple: #712a9d;
+    --purple-hover: #5c2180;
+    --dark-blue: #354252;
+    --darker-blue: #2a3543;
+    --text-gray: #8f99a6;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    color: var(--dark-blue);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-weight: 300;
+    line-height: 1.2;
+}
+
+p {
+    font-size: 15px;
+    color: var(--text-gray);
+}
+
+.container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn--white {
+    background: var(--white);
+    color: var(--dark-blue);
+}
+
+.btn--white:hover {
+    background: #f0f0f0;
+}
+
+.btn--purple {
+    background: var(--purple);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(113, 42, 157, 0.4);
+}
+
+.btn--purple:hover {
+    background: var(--purple-hover);
+}
+
+.btn--white-pink {
+    background: var(--white);
+    color: var(--pink);
+}
+
+.btn--white-pink:hover {
+    background: #f0f0f0;
+}
+
+/* --- Header (Glassmorphism) --- */
+.header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    padding: 0; /* Убрали отступы, чтобы меню растянулось от края до края */
+    
+    /* Эффект матового стекла */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.header__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch; /* Растягиваем элементы по высоте шапки */
+    min-height: 80px; /* Задаем высоту шапки (можешь изменить под себя) */
+}
+
+.logo {
+    display: flex;
+    align-items: center; /* Центрируем логотип по вертикали */
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--pink);
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: var(--white);
+}
+
+/* Группировка меню и кнопки */
+.header__right {
+    display: flex;
+    align-items: stretch; /* Растягиваем меню по высоте */
+    gap: 40px;
+}
+
+.nav {
+    display: flex;
+    gap: 5px; /* Небольшой отступ между ссылками */
+}
+
+.nav a {
+    display: flex;
+    align-items: center;
+    padding: 0 15px; /* Отступы по бокам для ссылок */
+    color: var(--white);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500; /* Ставим medium (среднюю) жирность */
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    
+    /* Резервируем место под границу, чтобы текст не прыгал */
+    border-bottom: 3px solid transparent; 
+}
+
+.nav a:hover {
+    opacity: 1;
+    border-bottom-color: var(--white); /* Белая граница при наведении */
+}
+
+/* Кнопка поиска с использованием твоих картинок */
+.btn-search {
+    display: flex;
+    align-items: center;
+    align-self: center; /* Возвращаем кнопку в центр, чтобы она не растягивалась на всю высоту */
+    gap: 10px;
+    padding: 10px 24px;
+    text-decoration: none;
+    color: var(--dark-blue);
+    font-size: 13px;
+    font-weight: 700;
+    
+    background: url('./imgs/search_area.jpg') no-repeat center center;
+    background-size: 100% 100%;
+    
+    border-radius: 30px;
+    transition: transform 0.2s ease;
+}
+
+.btn-search:hover {
+    transform: scale(1.02);
+}
+
+.btn-search__icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    display: block;
+}
+
+/* --- Hero Section --- */
+.hero {
+    height: 100vh;
+    min-height: 600px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+/* Затемнение для читаемости текста */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.hero__content {
+    position: relative;
+    z-index: 2;
+    margin-top: 50px;
+}
+
+.hero h1 {
+    font-size: 52px;
+    color: var(--white);
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+}
+
+.hero__subtext {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-top: 15px;
+}
+
+/* --- Features Section --- */
+.features {
+    background-color: var(--dark-blue);
+    padding: 80px 0;
+    position: relative;
+}
+
+/* Вдавленный полукруг снизу */
+.features::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 60px;
+    background-color: var(--dark-blue);
+    border-radius: 0 0 100px 100px;
+    z-index: 5;
+}
+
+.features__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 60px;
+}
+
+.feature-item h3 {
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+}
+
+.feature-item p {
+    color: #7a8899;
+    font-size: 14px;
+}
+
+/* --- Pink CTA Section --- */
+.cta-pink {
+    background-image: 
+        linear-gradient(rgba(226, 79, 96, 0.75), rgba(226, 79, 96, 0.75)),
+        url('./imgs/bb_forest.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: var(--pink); /* Фоллбек */
+    padding: 120px 0 100px;
+    text-align: center;
+}
+
+.cta-pink h2 {
+    color: var(--white);
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
+
+.cta-pink p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    margin-bottom: 30px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Split Sections --- */
+.split-section {
+    display: flex;
+    min-height: 500px;
+}
+
+.split-section__img {
+    flex: 1;
+    background-size: cover;
+    background-position: center;
+}
+
+.split-section__text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 60px;
+    background: var(--white);
+}
+
+.split-section__text-inner {
+    max-width: 480px;
+}
+
+.split-section__text-inner h3 {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.split-section__text-inner p {
+    font-size: 14px;
+    margin-bottom: 20px;
+    color: #6a7582;
+}
+
+/* Реверс колонок для второго блока */
+.split-section--reverse .split-section__img {
+    order: 2;
+}
+
+/* --- Purple CTA Section --- */
+.cta-purple {
+    background-size: cover;
+    background-position: center;
+    background-color: var(--purple); /* Фоллбек */
+    padding: 100px 0;
+    text-align: center;
+    position: relative;
+}
+
+.cta-purple::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(113, 42, 157, 0.7); /* Фиолетовый оверлей */
+}
+
+.cta-purple__content {
+    position: relative;
+    z-index: 2;
+}
+
+.cta-purple h2 {
+    color: var(--white);
+    font-size: 36px;
+    margin-bottom: 15px;
+    font-weight: 300;
+}
+
+.cta-purple p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-bottom: 35px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-purple .subtext {
+    font-size: 11px;
+    margin-top: 15px;
+    margin-bottom: 0;
+}
+
+/* --- Featured Post Section --- */
+.featured-post {
+    background-size: cover;
+    background-position: center;
+    padding: 150px 0 80px; /* Большой верхний отступ, чтобы текст был внизу */
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+}
+
+.featured-post::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+}
+
+.featured-post__content {
+    position: relative;
+    z-index: 2;
+}
+
+.badge {
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: var(--white);
+    padding: 5px 20px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+
+.featured-post h2 {
+    color: var(--white);
+    font-size: 38px;
+    margin-bottom: 30px;
+}
+
+.author {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--white);
+    font-size: 13px;
+}
+
+.author__img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* --- Footer Contact --- */
+.footer-contact {
+    background-color: var(--pink);
+    padding: 80px 0;
+    color: #9b2e41; /* Темный оттенок для контраста на розовом */
+}
+
+.footer-contact h3 {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7c2232;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.footer-contact p {
+    color: #a93a4e;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.footer-contact a {
+    color: #7c2232;
+    text-decoration: underline;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* --- Footer Copyright --- */
+.footer-copyright {
+    background-color: var(--darker-blue);
+    padding: 30px 0;
+    text-align: center;
+}
+
+.footer-copyright p {
+    color: #657589;
+    font-size: 12px;
+}
+
+/* =========================================
+   АДАПТИВНОСТЬ (Планшеты и Ноутбуки)
+   ========================================= */
+@media (max-width: 1024px) {
+    .hero h1 {
+        font-size: 42px;
+    }
+
+    /* Уменьшаем отступы в шапке */
+    .header__right {
+        gap: 20px;
+    }
+
+    .nav {
+        gap: 15px;
+    }
+
+    /* Уменьшаем паддинги в сплит-секциях */
+    .split-section__text {
+        padding: 40px;
+    }
+}
+
+/* =========================================
+   АДАПТИВНОСТЬ (Планшеты вертикальные и большие телефоны)
+   ========================================= */
+@media (max-width: 768px) {
+    /* --- Шапка --- */
+    .header {
+        position: relative;
+        background: var(--dark-blue);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border-bottom: none;
+        padding: 15px 0; /* Возвращаем отступы на мобильных */
+    }
+
+    .header__inner {
+        flex-direction: column;
+        gap: 15px;
+        min-height: auto; /* Сбрасываем фиксированную высоту */
+        align-items: center; /* Центрируем всё на мобильных */
+    }
+
+    .header__right {
+        flex-direction: column-reverse;
+        gap: 15px;
+        width: 100%;
+        align-items: center;
+    }
+
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+        width: 100%;
+    }
+    
+    .nav a {
+        padding: 10px 15px; /* Добавляем вертикальные отступы для удобного нажатия пальцем */
+        /* На мобильных граница будет просто подчеркивать текст */
+    }
+
+    /* --- Hero --- */
+    .hero {
+        height: auto;
+        padding: 80px 0;
+        min-height: 500px;
+    }
+
+    .hero h1 {
+        font-size: 32px;
+    }
+
+    /* --- Features --- */
+    .features__grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .features::after {
+        display: none; /* На мобильных скрываем вдавленный полукруг, чтобы не мешал */
+    }
+
+    /* --- CTA Секции --- */
+    .cta-pink, .cta-purple {
+        padding: 60px 0;
+    }
+
+    .cta-pink h2, .cta-purple h2 {
+        font-size: 26px;
+    }
+
+    /* --- Сплит секции (Фото + Текст) --- */
+    .split-section {
+        flex-direction: column;
+    }
+
+    .split-section--reverse .split-section__img {
+        order: 0; /* Возвращаем картинку наверх */
+    }
+
+    .split-section__img {
+        height: 300px;
+        width: 100%;
+    }
+
+    .split-section__text {
+        padding: 40px 20px;
+    }
+
+    /* --- Featured Post --- */
+    .featured-post {
+        padding: 100px 0 40px;
+    }
+
+    .featured-post h2 {
+        font-size: 28px;
+    }
+}
+
+/* =========================================
+   АДАПТИВНОСТЬ (Маленькие телефоны)
+   ========================================= */
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .nav a {
+        font-size: 12px;
+    }
+
+    /* Делаем кнопку поиска чуть компактнее */
+    .btn-search {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    
+    .btn-search__icon {
+        width: 12px;
+        height: 12px;
+    }
+
+    .split-section__text-inner h3,
+    .feature-item h3 {
+        font-size: 14px;
+    }
+
+    .footer-contact {
+        padding: 50px 0;
+    }
+}
