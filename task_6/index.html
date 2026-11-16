@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Сравнение производительности XML и JSON</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1000px; }
+        .controls { margin-bottom: 20px; padding: 15px; background: #f4f4f4; border-radius: 5px; }
+        button { padding: 10px 15px; margin-right: 10px; cursor: pointer; font-size: 14px; }
+        .stats { font-weight: bold; margin: 15px 0; font-size: 1.2em; color: #d9534f; }
+        .news-item { margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        .news-item h3 { margin: 0 0 5px 0; color: #0056b3; }
+        .news-item p { margin: 0; color: #555; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>Лабораторная: Сравнение обработки XML и JSON</h1>
+    
+    <div class="controls">
+        <label>Базовое имя файла: <input type="text" id="fileName" value="news_100"></label>
+        <br><br>
+        <button id="btnXml">1. Загрузить и обработать XML</button>
+        <button id="btnJson">2. Загрузить и обработать JSON</button>
+        <button id="btnClear">Очистить экран</button>
+    </div>
+
+    <div class="stats" id="stats">Здесь появится время выполнения...</div>
+    <div id="newsContainer"></div>
+
+    <script>
+        const btnXml = document.getElementById('btnXml');
+        const btnJson = document.getElementById('btnJson');
+        const btnClear = document.getElementById('btnClear');
+        const statsDiv = document.getElementById('stats');
+        const newsContainer = document.getElementById('newsContainer');
+        const fileNameInput = document.getElementById('fileName');
+
+        // ⚠️ САМОЕ ВАЖНОЕ: Функция рендеринга ОДИНАКОВАЯ для обоих форматов.
+        // Это обеспечивает выполнение требования "Алгоритмы и формат вывода должны совпадать".
+        function renderNews(items) {
+            let htmlString = '';
+            for (let i = 0; i < items.length; i++) {
+                htmlString += `
+                    <div class="news-item">
+                        <h3>${items[i].title}</h3>
+                        <p>${items[i].description}</p>
+                    </div>
+                `;
+            }
+            newsContainer.innerHTML = htmlString;
+        }
+
+        // --- ОБРАБОТКА XML ---
+        btnXml.addEventListener('click', async () => {
+            statsDiv.textContent = 'Загрузка XML...';
+            newsContainer.innerHTML = '';
+            const file = fileNameInput.value + '.xml';
+
+            try {
+                const response = await fetch(file);
+                const xmlString = await response.text();
+
+                // Засекаем время ПОСЛЕ загрузки файла (нам важна скорость работы JS, а не интернета)
+                const startTime = performance.now();
+
+                // 1. Парсинг XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+                const xmlItems = xmlDoc.getElementsByTagName("item");
+
+                // 2. Приведение к единому виду (массив объектов)
+                const preparedData = [];
+                for (let i = 0; i < xmlItems.length; i++) {
+                    preparedData.push({
+                        title: xmlItems[i].getElementsByTagName("title")[0].textContent,
+                        description: xmlItems[i].getElementsByTagName("description")[0].textContent
+                    });
+                }
+
+                // 3. Вывод на экран (идентичный алгоритм)
+                renderNews(preparedData);
+
+                const endTime = performance.now();
+                statsDiv.textContent = `Формат: XML | Новостей: ${preparedData.length} | Время обработки и вывода: ${(endTime - startTime).toFixed(2)} мс`;
+            } catch (error) {
+                statsDiv.textContent = `Ошибка: Файл ${file} не найден или заблокирован CORS.`;
+                console.error(error);
+            }
+        });
+
+        // --- ОБРАБОТКА JSON ---
+        btnJson.addEventListener('click', async () => {
+            statsDiv.textContent = 'Загрузка JSON...';
+            newsContainer.innerHTML = '';
+            const file = fileNameInput.value + '.json';
+
+            try {
+                const response = await fetch(file);
+                const jsonString = await response.text();
+
+                const startTime = performance.now();
+
+                // 1. Парсинг JSON (работает намного быстрее DOMParser)
+                const jsonData = JSON.parse(jsonString);
+                
+                // 2. Извлечение данных. 
+                // ВНИМАНИЕ: Структура зависит от онлайн-конвертера. 
+                // Обычно это rss.channel.item. Открой консоль (F12) и проверь jsonData, если будет ошибка.
+                let rawItems = jsonData.rss.channel.item;
+                if (!Array.isArray(rawItems)) rawItems = [rawItems]; // Защита, если новость 1
+                
+                const preparedData = rawItems.map(item => ({
+                    // Если конвертер выдает объект вида {"#text": "Текст"}, замени item.title на item.title['#text']
+                    title: typeof item.title === 'string' ? item.title : item.title['#text'],
+                    description: typeof item.description === 'string' ? item.description : item.description['#text']
+                }));
+
+                // 3. Вывод на экран (ИСПОЛЬЗУЕТСЯ ТА ЖЕ ФУНКЦИЯ, ЧТО И ДЛЯ XML)
+                renderNews(preparedData);
+
+                const endTime = performance.now();
+                statsDiv.textContent = `Формат: JSON | Новостей: ${preparedData.length} | Время обработки и вывода: ${(endTime - startTime).toFixed(2)} мс`;
+            } catch (error) {
+                statsDiv.textContent = `Ошибка: Файл ${file} не найден или неверная структура JSON.`;
+                console.error(error);
+            }
+        });
+
+        btnClear.addEventListener('click', () => {
+            newsContainer.innerHTML = '';
+            statsDiv.textContent = 'Здесь появится время выполнения...';
+        });
+    </script>
+</body>
+</html>
