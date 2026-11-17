@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>XML → JSON конвертер</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; gap: 20px; }
+        .panel { flex: 1; display: flex; flex-direction: column; }
+        textarea {
+            width: 100%; height: 400px;
+            font-family: monospace; font-size: 14px;
+            padding: 10px; box-sizing: border-box;
+        }
+        .buttons { margin: 15px 0; display: flex; gap: 10px; }
+        button {
+            padding: 10px 25px;
+            font-size: 16px; cursor: pointer;
+        }
+        #clearBtn { background: #f0f0f0; }
+        #clearBtn:hover { background: #e0e0e0; }
+        .error { color: #c00; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>XML → JSON конвертер</h1>
+
+    <div class="container">
+        <div class="panel">
+            <h3>XML (ввод)</h3>
+            <textarea id="xmlInput" placeholder="Введите XML-документ..."></textarea>
+        </div>
+        <div class="panel">
+            <h3>JSON (результат)</h3>
+            <textarea id="jsonOutput" readonly></textarea>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="convert()">Конвертировать</button>
+        <button id="clearBtn" onclick="clearAll()">Очистить</button>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <script>
+        function convert() {
+            const xmlText = document.getElementById('xmlInput').value.trim();
+            const errorDiv = document.getElementById('error');
+            const jsonOutput = document.getElementById('jsonOutput');
+            errorDiv.textContent = '';
+            jsonOutput.value = '';
+
+            if (!xmlText) {
+                errorDiv.textContent = 'Поле XML пустое.';
+                return;
+            }
+
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+
+                const parseError = xmlDoc.querySelector('parsererror');
+                if (parseError) {
+                    throw new Error('Невалидный XML:\n' + parseError.textContent);
+                }
+
+                const jsonObj = xmlToJSON(xmlDoc.documentElement);
+
+                const wrapped = {};
+                wrapped[xmlDoc.documentElement.nodeName] = jsonObj;
+
+                jsonOutput.value = JSON.stringify(wrapped, null, 2);
+            } catch (e) {
+                errorDiv.textContent = e.message;
+            }
+        }
+
+        /**
+         * Очистка всех полей формы и блока ошибок.
+         */
+        function clearAll() {
+            document.getElementById('xmlInput').value = '';
+            document.getElementById('jsonOutput').value = '';
+            document.getElementById('error').textContent = '';
+        }
+
+        function xmlToJSON(node) {
+            const result = {};
+
+            if (node.attributes && node.attributes.length > 0) {
+                result['@attributes'] = {};
+                for (let i = 0; i < node.attributes.length; i++) {
+                    const attr = node.attributes[i];
+                    result['@attributes'][attr.nodeName] = attr.nodeValue;
+                }
+            }
+
+            let textContent = '';
+            let hasChildElements = false;
+
+            if (node.childNodes) {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    const child = node.childNodes[i];
+
+                    if (child.nodeType === Node.TEXT_NODE) {
+                        const t = child.nodeValue.trim();
+                        if (t) textContent += (textContent ? ' ' : '') + t;
+                    } else if (child.nodeType === Node.ELEMENT_NODE) {
+                        hasChildElements = true;
+                        const tag = child.nodeName;
+                        const value = xmlToJSON(child);
+
+                        if (result[tag] !== undefined) {
+                            if (!Array.isArray(result[tag])) {
+                                result[tag] = [result[tag]];
+                            }
+                            result[tag].push(value);
+                        } else {
+                            result[tag] = value;
+                        }
+                    }
+                }
+            }
+
+            if (!hasChildElements && textContent) {
+                if (Object.keys(result).length === 0) {
+                    return textContent;
+                } else {
+                    result['#text'] = textContent;
+                }
+            }
+
+            if (!hasChildElements && !textContent && Object.keys(result).length === 0) {
+                return '';
+            }
+
+            return result;
+        }
+    </script>
+</body>
+</html>

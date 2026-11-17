@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cars dealership="АвтоМир" city="Москва">
+    <car id="1" year="2020">
+        <brand>Toyota</brand>
+        <model>Camry</model>
+        <price currency="RUB">2500000</price>
+        <engine volume="2.5" power="181">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>климат-контроль</feature>
+            <feature>камера заднего вида</feature>
+        </features>
+        <owner>Иванов И.И.</owner>
+    </car>
+
+    <car id="2" year="2022">
+        <brand>BMW</brand>
+        <model>X5</model>
+        <price currency="RUB">7800000</price>
+        <engine volume="3.0" power="340">diesel</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>пневмоподвеска</feature>
+            <feature>панорамная крыша</feature>
+            <feature>адаптивный круиз</feature>
+        </features>
+        <owner>Петров П.П.</owner>
+    </car>
+
+    <car id="3" year="2018">
+        <brand>Lada</brand>
+        <model>Vesta</model>
+        <price currency="RUB">850000</price>
+        <engine volume="1.6" power="106">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+        </features>
+        <owner>Сидоров С.С.</owner>
+    </car>
+
+    <car id="4" year="2023">
+        <brand>Mercedes-Benz</brand>
+        <model>E-Class</model>
+        <price currency="EUR">65000</price>
+        <engine volume="2.0" power="258">petrol</engine>
+        <features>
+            <feature>MBUX</feature>
+            <feature>AMG-пакет</feature>
+        </features>
+        <owner/>
+    </car>
+
+    <car id="5" year="2015">
+        <brand>Ford</brand>
+        <model>Focus</model>
+        <price currency="RUB">650000</price>
+        <engine volume="1.6" power="85">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>подогрев сидений</feature>
+        </features>
+        <owner>Кузнецов А.В.</owner>
+    </car>
+
+    <car id="6" year="2021">
+        <brand>Kia</brand>
+        <model>K5</model>
+        <price currency="RUB">2200000</price>
+        <engine volume="2.0" power="150">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>LED-фары</feature>
+            <feature>беспроводная зарядка</feature>
+        </features>
+        <owner>Смирнова О.Н.</owner>
+    </car>
+
+    <car id="7" year="2019">
+        <brand>Hyundai</brand>
+        <model>Solaris</model>
+        <price currency="RUB">950000</price>
+        <engine volume="1.4" power="100">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+        </features>
+        <owner/>
+    </car>
+
+    <car id="8" year="2024">
+        <brand>Audi</brand>
+        <model>A6</model>
+        <price currency="EUR">72000</price>
+        <engine volume="3.0" power="340">hybrid</engine>
+        <features>
+            <feature>Quattro</feature>
+            <feature>Matrix LED</feature>
+            <feature>виртуальная приборка</feature>
+            <feature>адаптивная подвеска</feature>
+            <feature>массаж сидений</feature>
+        </features>
+        <owner>Новый автомобиль</owner>
+    </car>
+
+    <car id="9" year="2017">
+        <brand>Nissan</brand>
+        <model>Qashqai</model>
+        <price currency="RUB">1350000</price>
+        <engine volume="2.0" power="144">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>камера 360°</feature>
+        </features>
+        <owner>Волков Д.А.</owner>
+    </car>
+
+    <car id="10" year="2022">
+        <brand>Skoda</brand>
+        <model>Octavia</model>
+        <price currency="EUR">28000</price>
+        <engine volume="1.4" power="150">petrol</engine>
+        <features>
+            <feature>ABS</feature>
+            <feature>виртуальная приборка</feature>
+            <feature>электробагажник</feature>
+        </features>
+        <owner/>
+    </car>
+</cars>
