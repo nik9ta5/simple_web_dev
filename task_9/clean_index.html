@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Vanilla JS + XML</title>
+    <script>
+        // СТАРТ ЗАМЕРА: до загрузки любых ресурсов
+        window.__t0 = performance.now();
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1000px; }
+        .news-item { margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        .news-item h3 { margin: 0 0 5px 0; color: #0056b3; }
+        .news-item p { margin: 0; color: #555; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div id="newsContainer">Загрузка...</div>
+
+    <script>
+        (async function () {
+            const params = new URLSearchParams(location.search);
+            const file = 'st/' + (params.get('file') || 'news_100.xml');
+
+            try {
+                const res = await fetch(file);
+                const xmlString = await res.text();
+
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+                const items = xmlDoc.getElementsByTagName('item');
+
+                let html = '';
+                for (let i = 0; i < items.length; i++) {
+                    const title = items[i].getElementsByTagName('title')[0].textContent.trim();
+                    const desc  = items[i].getElementsByTagName('description')[0].textContent.trim();
+                    html += `<div class="news-item"><h3>${title}</h3><p>${desc}</p></div>`;
+                }
+                document.getElementById('newsContainer').innerHTML = html;
+
+                requestAnimationFrame(() => {
+                    const t1 = performance.now();
+                    const ms = (t1 - window.__t0).toFixed(2);
+                    document.title = 'READY:' + ms;
+                    console.log('VANILLA | ' + file + ' | ' + ms + ' мс');
+                });
+            } catch (e) {
+                document.title = 'ERROR';
+                console.error(e);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>jQuery + XML</title>
+    <script>
+        window.__t0 = performance.now();
+    </script>
+    <script src="jquery-3.7.1.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1000px; }
+        .news-item { margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        .news-item h3 { margin: 0 0 5px 0; color: #0056b3; }
+        .news-item p { margin: 0; color: #555; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div id="newsContainer">Загрузка...</div>
+
+    <script>
+        $(function () {
+            const params = new URLSearchParams(location.search);
+            const file = 'st/' + (params.get('file') || 'news_100.xml');
+
+            $.ajax({
+                url: file,
+                dataType: 'xml'
+            })
+            .done(function (xmlDoc) {
+                const $items = $(xmlDoc).find('item');
+                const $c = $('#newsContainer').empty();
+
+                $items.each(function () {
+                    const title = $(this).find('title').text().trim();
+                    const desc  = $(this).find('description').text().trim();
+                    $c.append(
+                        $('<div class="news-item">').append(
+                            $('<h3>').text(title),
+                            $('<p>').text(desc)
+                        )
+                    );
+                });
+
+                requestAnimationFrame(() => {
+                    const t1 = performance.now();
+                    const ms = (t1 - window.__t0).toFixed(2);
+                    document.title = 'READY:' + ms;
+                    console.log('JQUERY | ' + file + ' | ' + ms + ' мс');
+                });
+            })
+            .fail(function (xhr, status, err) {
+                document.title = 'ERROR';
+                console.error(status, err);
+            });
+        });
+    </script>
+</body>
+</html>
