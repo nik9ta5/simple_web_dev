@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Читалка</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; background: #fdfdfd; }
+  h2 { text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-top: 40px; font-size: 22px; }
+  .chapter { margin-bottom: 50px; }
+  .loader { text-align: center; padding: 20px; color: #888; font-style: italic; }
+  #status { position: fixed; top: 10px; right: 10px; background: #e0e7ff; color: #3730a3; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 9999;}
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+</head>
+<body>
+
+<div id="status">Загрузка...</div>
+<button id="btn-share" style="position: fixed; top: 10px; left: 10px; z-index: 9999; padding: 8px 12px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 4px; font-weight: bold;">
+  🔗 Поделиться
+</button>
+
+<div id="chapters-container"></div>
+<div class="loader" id="bottom-loader" style="display:none;">Загрузка...</div>
+
+<script>
+let currentUid = null;
+
+const container = document.getElementById('chapters-container');
+const bottomLoader = document.getElementById('bottom-loader');
+const statusEl = document.getElementById('status');
+
+let currentChapterId = null;
+let prevChapterId = null;
+let nextChapterId = null;
+let isLoading = false;
+
+// --- 1. ИНИЦИАЛИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
+async function initUser() {
+    // Проверяем URL на наличие переданного uid
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUid = urlParams.get('uid');
+    
+    if (urlUid) {
+        // Если пришли по ссылке - сохраняем в localStorage
+        localStorage.setItem('book_uid', urlUid);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        alert("Прогресс успешно перенесен!");
+        currentUid = urlUid;
+    } else {
+        // Иначе ищем в localStorage
+        currentUid = localStorage.getItem('book_uid');
+        if (!currentUid) {
+            // Если нет - просим сервер выдать новый
+            const res = await fetch('/api/init');
+            const data = await res.json();
+            currentUid = data.uid;
+            localStorage.setItem('book_uid', currentUid);
+        }
+    }
+}
+
+// --- 2. КНОПКА "ПОДЕЛИТЬСЯ" ---
+document.getElementById('btn-share').addEventListener('click', function() {
+    if (currentUid) {
+        const shareUrl = window.location.origin + window.location.pathname + '?uid=' + currentUid;
+        prompt("Скопируйте эту ссылку и откройте на другом устройстве:", shareUrl);
+    } else {
+        alert("Ошибка: ID пользователя еще не загружен.");
+    }
+});
+
+// --- 3. РАБОТА С СЕТЬЮ (Передаем UID в заголовке) ---
+async function fetchChapter(id = null) {
+  const url = id ? `/api/chapter?chapter_id=${id}` : '/api/chapter';
+  const res = await fetch(url, {
+      headers: { 'X-User-Id': currentUid } // <--- Передаем ID
+  });
+  if (!res.ok) throw new Error('Ошибка сети');
+  return res.json();
+}
+
+async function saveProgress(chapterId) {
+  try {
+    await fetch('/api/progress', {
+      method: 'POST',
+      headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Id': currentUid // <--- Передаем ID
+      },
+      body: JSON.stringify({ chapter_id: chapterId })
+    });
+    statusEl.textContent = `Сохранено: глава ${chapterId}`;
+    setTimeout(() => { statusEl.textContent = 'Синхронизировано'; }, 2000);
+  } catch (e) {
+    statusEl.textContent = 'Ошибка сохранения';
+  }
+}
+
+// --- 4. ОТРИСОВКА И СКРОЛЛ ---
+function renderChapter(chapter, prepend = false) {
+  const el = document.createElement('article');
+  el.className = 'chapter';
+  el.dataset.id = chapter.id;
+  el.innerHTML = chapter.text;
+  
+  if (prepend) {
+    container.prepend(el);
+  } else {
+    container.appendChild(el);
+  }
+}
+
+function getVisibleChapterId() {
+  const mid = window.innerHeight / 2;
+  const chapters = [...document.querySelectorAll('.chapter')];
+  for (const ch of chapters) {
+    const rect = ch.getBoundingClientRect();
+    if (rect.top <= mid && rect.bottom >= mid) {
+      return Number(ch.dataset.id);
+    }
+  }
+  return null;
+}
+
+async function loadNext() {
+  if (isLoading || !nextChapterId) return;
+  isLoading = true;
+  bottomLoader.style.display = 'block';
+  try {
+    const data = await fetchChapter(nextChapterId);
+    renderChapter(data.chapter);
+    prevChapterId = data.prev_id;
+    nextChapterId = data.next_id;
+    if (!nextChapterId) bottomLoader.textContent = 'Конец книги';
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isLoading = false;
+    if (nextChapterId) bottomLoader.style.display = 'none';
+  }
+}
+
+async function loadPrev() {
+  if (isLoading || !prevChapterId) return;
+  isLoading = true;
+  const oldHeight = document.documentElement.scrollHeight;
+  const oldScroll = window.scrollY;
+
+  try {
+    const data = await fetchChapter(prevChapterId);
+    renderChapter(data.chapter, true);
+    prevChapterId = data.prev_id;
+    nextChapterId = data.next_id;
+
+    const newHeight = document.documentElement.scrollHeight;
+    window.scrollTo(0, oldScroll + (newHeight - oldHeight));
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isLoading = false;
+  }
+}
+
+let scrollTimeout = null;
+window.addEventListener('scroll', () => {
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const scrollTop = window.scrollY;
+    const scrollBottom = scrollTop + window.innerHeight;
+    const height = document.documentElement.scrollHeight;
+
+    if (scrollBottom >= height - 100 && nextChapterId) loadNext();
+    if (scrollTop <= 100 && prevChapterId) loadPrev();
+
+    const visibleId = getVisibleChapterId();
+    if (visibleId && visibleId !== currentChapterId) {
+      currentChapterId = visibleId;
+      saveProgress(visibleId);
+    }
+  }, 150);
+});
+
+// --- 5. СТАРТ ПРИЛОЖЕНИЯ ---
+(async function init() {
+  try {
+    await initUser(); // Сначала получаем UID
+    statusEl.textContent = "Загрузка главы...";
+    
+    const data = await fetchChapter(); // Запрашиваем главу с нашим UID
+    renderChapter(data.chapter);
+    
+    currentChapterId = data.chapter.id;
+    prevChapterId = data.prev_id;
+    nextChapterId = data.next_id;
+    statusEl.textContent = `Загружена глава ${currentChapterId}`;
+    
+    if (document.documentElement.scrollHeight <= window.innerHeight && nextChapterId) {
+        loadNext();
+    }
+  } catch (e) {
+    console.error(e);
+    statusEl.textContent = 'Ошибка загрузки';
+  }
+})();
+</script>
+
+</body>
+</html>

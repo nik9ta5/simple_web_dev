@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Monitor</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
+  h1 { font-size: 24px; margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  th, td { border: 1px solid #e0e0e0; padding: 12px 15px; text-align: right; }
+  th { background: #f4f4f4; font-weight: 600; color: #555; text-align: center; }
+  td.usd { color: #777; font-size: 14px; }
+  .up   { color: #0a7d00; font-weight: bold; }
+  .down { color: #c00;   font-weight: bold; }
+  .status { margin-top: 15px; font-size: 14px; color: #666; background: #fff; padding: 10px; border-radius: 4px; display: inline-block; border: 1px solid #e0e0e0;}
+  .status .err { color: #c00; }
+  .cache-badge { background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-left: 8px; border: 1px solid #ffeeba;}
+  .net-badge { background: #d4edda; color: #155724; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-left: 8px; border: 1px solid #c3e6cb;}
+</style>
+</head>
+<body>
+
+<h1>Курс биткоина</h1>
+
+<table id="btc-table">
+  <thead>
+    <tr>
+      <th rowspan="2">Рыночная цена, РУБ</th>
+      <th colspan="2">Рыночная цена, USD</th>
+      <th colspan="2">Объём сделок (за 24ч)</th>
+      <th rowspan="2">Стоимость сделок, РУБ</th>
+      <th rowspan="2">Изменение стоимости сделок, РУБ</th>
+    </tr>
+    <tr>
+      <th>USD</th><th>Курс ЦБ, РУБ</th>
+      <th>BTC</th><th>USD</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr id="row">
+      <td id="price-rub" style="font-weight:bold; font-size:16px;">—</td>
+      <td id="price-usd" class="usd">—</td>
+      <td id="usd-rate" class="usd">—</td>
+      <td id="btc-volume">—</td>
+      <td id="usd-volume" class="usd">—</td>
+      <td id="total-rub" style="font-weight:bold;">—</td>
+      <td id="delta">—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="status" id="status">Загрузка…</div>
+
+<script>
+// --- КОНФИГУРАЦИЯ ---
+const BTC_URL      = 'https://luky3.jinr.ru/bitcoin.json';
+const BTC_FALLBACK = 'https://api.blockchain.info/stats';
+const CBR_URL      = 'https://www.cbr-xml-daily.ru/daily_json.js';
+
+// Настройки кеша (в миллисекундах)
+const TTL_BTC_MS = 2 * 60 * 1000;       // 2 минуты (чтобы видеть динамику каждую минуту)
+const TTL_CBR_MS = 6 * 60 * 60 * 1000;  // 6 часов (курс ЦБ меняется раз в день)
+const REFRESH_MS = 60 * 1000;           // Таймер обновления раз в минуту
+
+// --- КЛАСС ДЛЯ КЕШИРОВАНИЯ (по заданию) ---
+class CacheManager {
+  constructor(key) {
+    this.key = key;
+    this.memory = {}; 
+    this.loadFromStorage();
+  }
+  loadFromStorage() {
+    try {
+      const raw = sessionStorage.getItem(this.key);
+      if (raw) this.memory = JSON.parse(raw);
+    } catch (e) { console.warn('Ошибка чтения кеша'); }
+  }
+  saveToStorage() {
+    try {
+      sessionStorage.setItem(this.key, JSON.stringify(this.memory));
+    } catch (e) { console.warn('Ошибка записи кеша'); }
+  }
+  // Получить данные (или null, если устарели/нет)
+  get(key, ttl) {
+    const entry = this.memory[key];
+    if (entry && (Date.now() - entry.ts) < ttl) {
+      return entry.data;
+    }
+    return null;
+  }
+  // Сохранить данные
+  set(key, data) {
+    this.memory[key] = { data, ts: Date.now() };
+    this.saveToStorage();
+  }
+}
+
+const cache = new CacheManager('btc_app_cache_v1');
+const state = { prevTotalRub: null };
+
+const $ = id => document.getElementById(id);
+const fmt = (n, digits = 2) => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: digits });
+
+// --- ЗАГРУЗКА ДАННЫХ ИЗ СЕТИ ---
+async function fetchJson(url) {
+  // cache: 'no-store' гарантирует, что браузер не отдаст свой HTTP-кеш
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function fetchBtcFromNet() {
+  try {
+    const j = await fetchJson(BTC_URL);
+    const price_usd = j?.USD?.last ?? j?.price ?? j?.market_price_usd ?? j?.USD?.buy;
+    let total_btc = j?.volume_btc ?? j?.volume ?? j?.trade_volume_btc;
+    if (!price_usd) throw new Error('Не найдена цена');
+    if (!total_btc) throw new Error('Не найден объем');
+    if (total_btc > 1e7) total_btc /= 1e8; // защита от сатоши
+    return { price_usd: Number(price_usd), total_btc: Number(total_btc) };
+  } catch (e) {
+    console.warn('luky3 недоступен, идем в blockchain.info:', e.message);
+    const j = await fetchJson(BTC_FALLBACK);
+    const price_usd = Number(j.market_price_usd);
+    let total_btc = j.trade_volume_usd ? (j.trade_volume_usd / price_usd) : 0;
+    return { price_usd, total_btc };
+  }
+}
+
+async function fetchCbrFromNet() {
+  const j = await fetchJson(CBR_URL);
+  return Number(j?.Valute?.USD?.Value);
+}
+
+// --- ПОЛУЧЕНИЕ ДАННЫХ (КЕШ ИЛИ СЕТЬ) ---
+async function getData() {
+  let btcData = cache.get('btc', TTL_BTC_MS);
+  let btcSource = 'cache';
+  
+  if (!btcData) {
+    btcData = await fetchBtcFromNet();
+    cache.set('btc', btcData);
+    btcSource = 'net';
+  }
+
+  let cbrData = cache.get('cbr', TTL_CBR_MS);
+  let cbrSource = 'cache';
+
+  if (!cbrData) {
+    cbrData = await fetchCbrFromNet();
+    cache.set('cbr', cbrData);
+    cbrSource = 'net';
+  }
+
+  return { btcData, cbrData, btcSource, cbrSource };
+}
+
+// --- ОБНОВЛЕНИЕ И РЕНДЕР ---
+async function updateTable() {
+  try {
+    const { btcData, cbrData, btcSource, cbrSource } = await getData();
+    
+    const priceUsd = btcData.price_usd;
+    const volumeBtc = btcData.total_btc;
+    const usdRate = cbrData;
+
+    // Расчеты
+    const priceRub = priceUsd * usdRate;
+    const volumeUsd = volumeBtc * priceUsd;
+    const totalRub = volumeBtc * priceRub;
+
+    // Отрисовка полей
+    $('price-rub').textContent = fmt(priceRub) + ' ₽';
+    $('price-usd').textContent = fmt(priceUsd) + ' $';
+    $('usd-rate').textContent  = fmt(usdRate) + ' ₽';
+    $('btc-volume').textContent = fmt(volumeBtc, 2) + ' BTC';
+    $('usd-volume').textContent = fmt(volumeUsd, 0) + ' $';
+    $('total-rub').textContent = fmt(totalRub) + ' ₽';
+
+    // Изменение
+    const deltaEl = $('delta');
+    if (state.prevTotalRub === null) {
+      deltaEl.textContent = '—';
+      deltaEl.className = '';
+    } else {
+      const delta = totalRub - state.prevTotalRub;
+      const sign = delta > 0 ? '+' : '';
+      deltaEl.textContent = sign + fmt(delta) + ' ₽';
+      deltaEl.className = delta > 0 ? 'up' : (delta < 0 ? 'down' : '');
+    }
+    state.prevTotalRub = totalRub;
+
+    // Статус и время
+    const timeStr = new Date().toLocaleTimeString('ru-RU');
+    const btcBadge = btcSource === 'net' ? '<span class="net-badge">BTC: из сети</span>' : '<span class="cache-badge">BTC: из кеша</span>';
+    const cbrBadge = cbrSource === 'net' ? '<span class="net-badge">ЦБ: из сети</span>' : '<span class="cache-badge">ЦБ: из кеша</span>';
+    
+    $('status').className = 'status';
+    $('status').innerHTML = `Последнее обновление: ${timeStr} ${btcBadge} ${cbrBadge}`;
+
+  } catch (e) {
+    console.error(e);
+    $('status').className = 'status err';
+    $('status').textContent = 'Ошибка сети: ' + e.message + '. Показаны последние данные.';
+  }
+}
+
+// --- ЗАПУСК ---
+updateTable(); // Сразу при загрузке
+setInterval(updateTable, REFRESH_MS); // И раз в минуту
+
+// Обновление при возврате на вкладку
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) updateTable();
+});
+</script>
+</body>
+</html>
